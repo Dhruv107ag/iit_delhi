@@ -8,7 +8,7 @@ import Search from './pages/Search';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
-import StoreDashboard from './pages/StoreDashboard';
+import Dashboard from './pages/Dashboard';
 import UserDashboard from './pages/UserDashboard';
 import StoreFront from './pages/StoreFront';
 
@@ -26,7 +26,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/store-dashboard" element={<StoreDashboard />} />
+                <Route path="/store-dashboard" element={<Dashboard />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
                 <Route path="/store/:id" element={<StoreFront />} />
                 <Route path="*" element={<Landing />} />

@@ -7,6 +7,8 @@ import Search from './pages/Search';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -21,7 +23,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              {/* Added wildcard for active tabs if needed */}
+              <Route path="/user-dashboard" element={<UserDashboard />} />
+              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<Landing />} />
             </Routes>
           </main>

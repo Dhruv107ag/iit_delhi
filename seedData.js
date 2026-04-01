@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Store = require('./models/Store');
 const Doctor = require('./models/Doctor');
+const Medicine = require('./models/Medicine');
 
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/project2')
   .then(async () => {
@@ -11,6 +12,7 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/project2')
     // Clear existing dummy data if needed (optional)
     await Store.deleteMany({ username: { $regex: '^store' } });
     await Doctor.deleteMany({ name: { $regex: '^Dr.' } });
+    await Medicine.deleteMany(); // Clear old medicines
 
     // Seed dummy store owners
     const salt = await bcrypt.genSalt(10);
@@ -68,8 +70,21 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/project2')
         storeId: store2._id
       }
     ]);
-
     console.log('Successfully created Doctors!');
+
+    // Seed dummy medicines
+    const commonMedicines = [
+      { name: 'Paracetamol 500mg', price: 40, quantity: 250, expiry: new Date('2026-12-31'), composition: 'Paracetamol', storeId: store1._id },
+      { name: 'Digene Gel', price: 120, quantity: 50, expiry: new Date('2025-08-15'), composition: 'Antacid', storeId: store1._id },
+      { name: 'Dolo 650', price: 55, quantity: 300, expiry: new Date('2027-01-20'), composition: 'Paracetamol', storeId: store1._id },
+      { name: 'Amoxicillin 250mg', price: 85, quantity: 150, expiry: new Date('2025-11-10'), composition: 'Antibiotic', storeId: store2._id },
+      { name: 'Cetirizine 10mg', price: 30, quantity: 500, expiry: new Date('2028-04-05'), composition: 'Antihistamine', storeId: store2._id },
+      { name: 'Volini Pain Relief Spray', price: 150, quantity: 20, expiry: new Date('2026-06-30'), composition: 'Diclofenac', storeId: store2._id }
+    ];
+
+    await Medicine.create(commonMedicines);
+    console.log('Successfully created Medicines!');
+
     console.log('------------------------------');
     console.log('Sample Store Logins:');
     console.log('Store 1 -> Username: store_city, Password: store123');

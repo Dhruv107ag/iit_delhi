@@ -6,9 +6,20 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Enable CORS with credentials for Vite frontend
+// Enable CORS with credentials
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for hackathon
+    }
+  },
   credentials: true
 }));
 
@@ -19,7 +30,12 @@ app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecretkey123',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // Import Routes

@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { SearchIcon, MapPin, Pill, Star, Clock } from 'lucide-react';
 import './Search.css';
 
 export default function Search() {
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [queryType, setQueryType] = useState('medicines'); // medicines, stores, doctors
+  const [queryType, setQueryType] = useState('medicines');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Read tab from URL query param
   useEffect(() => {
-    // Initial fetch to populate something
+    const tab = searchParams.get('tab');
+    if (tab && ['medicines', 'stores', 'doctors'].includes(tab)) {
+      setQueryType(tab);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     handleSearch();
   }, [queryType]);
 
@@ -22,9 +31,13 @@ export default function Search() {
 
     try {
       let endpoint = '';
-      if (queryType === 'medicines') endpoint = `/medicines/search?name=${searchTerm}`;
-      else if (queryType === 'stores') endpoint = `/stores`; // If no dedicated search, fetch all and filter client side
-      else if (queryType === 'doctors') endpoint = `/doctors`;
+      if (queryType === 'medicines') {
+        endpoint = searchTerm ? `/medicines/search?q=${searchTerm}` : `/medicines`;
+      } else if (queryType === 'stores') {
+        endpoint = `/stores`;
+      } else if (queryType === 'doctors') {
+        endpoint = `/doctors`;
+      }
 
       const response = await api.get(endpoint);
       

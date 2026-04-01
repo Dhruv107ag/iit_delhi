@@ -10,17 +10,14 @@ const {
 
 const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 
-// Protect all store routes for store_owner only
-router.use(requireAuth, requireRole('store_owner'));
+// Public routes (for Search page)
+router.get('/', getStores);
+router.get('/:id', getStore);
 
-// Standard CRUD operations
-router.route('/')
-  .post(createStore)
-  .get(getStores);
-
-router.route('/:id')
-  .get(getStore)
-  .put(updateStore)
-  .delete(deleteStore);
+// Protected routes (store_owner only)
+router.post('/', requireAuth, requireRole('store_owner'), createStore);
+router.put('/:id', requireAuth, requireRole('store_owner'), updateStore);
+router.delete('/:id', requireAuth, requireRole('store_owner'), deleteStore);
 
 module.exports = router;
+

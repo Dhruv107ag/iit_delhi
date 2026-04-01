@@ -22,8 +22,10 @@ export default function Login() {
     if (result.success) {
       if (result.role === 'admin') {
          navigate('/admin');
+      } else if (result.role === 'user') {
+         navigate('/user-dashboard');
       } else {
-         navigate('/dashboard');
+         navigate('/dashboard'); // Store owner dashboard
       }
     } else {
       setError(result.message);
@@ -38,11 +40,11 @@ export default function Login() {
   return (
     <div className="auth-page section">
       <div className="container auth-container">
-        <div className="auth-card glass-panel">
+        <div className="auth-card glass-panel" style={{ maxWidth: '400px' }}>
           <div className="auth-header text-center">
             <HeartPulse size={40} color="var(--color-primary)" className="margin-auto" />
-            <h2>Store Login</h2>
-            <p>Access your Mediconnect dashboard</p>
+            <h2>Welcome Back</h2>
+            <p>Login to your Mediconnect account</p>
           </div>
 
           {error && <div className="auth-error">{error}</div>}
@@ -56,7 +58,7 @@ export default function Login() {
                 className="input-field" 
                 value={credentials.username}
                 onChange={handleChange}
-                placeholder="Enter your store username" 
+                placeholder="Enter your username" 
                 required 
               />
             </div>
@@ -74,13 +76,13 @@ export default function Login() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary auth-btn" disabled={isLoading}>
+            <button type="submit" className="btn btn-primary auth-btn mt-3" disabled={isLoading}>
               {isLoading ? 'Authenticating...' : <><ShieldCheck size={18} /> Login to Dashboard</>}
             </button>
           </form>
 
-          <div className="auth-footer text-center">
-            <p>Don't have a store account? <Link to="/register">Register here</Link></p>
+          <div className="auth-footer text-center mt-3">
+            <p>Don't have an account? <Link to="/register">Register here</Link></p>
           </div>
         </div>
       </div>

@@ -1,23 +1,21 @@
 const bcrypt = require('bcryptjs');
 const Store = require('../models/Store');
 const Admin = require('../models/Admin');
+const User = require('../models/User');
 
-// @desc    Register a new store
+// @desc    Register a new store or user
 // @route   POST /api/auth/register
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, address, phone, openingTime, closingTime, username, password } = req.body;
+    const { name, address, phone, openingTime, closingTime, username, password, role } = req.body;
     
-    // Check if store with username already exists
+    // Check if username exists in any collection
     const existingStore = await Store.findOne({ username });
-    if (existingStore) {
-      return res.status(400).json({ message: 'Username already exists' });
-    }
-
-    // Check if Admin exists with same username (optional but good practice)
     const existingAdmin = await Admin.findOne({ username });
-    if (existingAdmin) {
+    const existingUser = await User.findOne({ username });
+
+    if (existingStore || existingAdmin || existingUser) {
       return res.status(400).json({ message: 'Username already taken' });
     }
 
@@ -25,21 +23,32 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newStore = new Store({
-      name,
-      address,
-      phone,
-      openingTime,
-      closingTime,
-      username,
-      password: hashedPassword,
-      role: 'store_owner'
-    });
-
-    await newStore.save();
-    res.status(201).json({ message: 'Store registered successfully' });
+    if (role === 'user') {
+      const newUser = new User({
+        name,
+        username,
+        password: hashedPassword,
+        role: 'user'
+      });
+      await newUser.save();
+      return res.status(201).json({ message: 'User registered successfully' });
+    } else {
+      // Default to store registration
+      const newStore = new Store({
+        name,
+        address,
+        phone,
+        openingTime,
+        closingTime,
+        username,
+        password: hashedPassword,
+        role: 'store_owner'
+      });
+      await newStore.save();
+      return res.status(201).json({ message: 'Store registered successfully' });
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Error registering store', error: error.message });
+    res.status(500).json({ message: 'Error registering', error: error.message });
   }
 };
 
@@ -55,6 +64,10 @@ const login = async (req, res) => {
     if (!user) {
       user = await Store.findOne({ username });
     }
+    
+    if (!user) {
+      user = await User.findOne({ username });
+    }
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -67,7 +80,8 @@ const login = async (req, res) => {
 
     req.session.user = {
       id: user._id,
-      role: user.role
+      role: user.role,
+      name: user.name || user.username
     };
 
     res.status(200).json({ message: 'Login successful', role: user.role });

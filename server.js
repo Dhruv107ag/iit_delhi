@@ -6,8 +6,11 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with credentials for Vite frontend
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
 // Parse JSON request body
 app.use(express.json());

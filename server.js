@@ -6,6 +6,9 @@ const connectDB = require('./config/db');
 
 const app = express();
 
+// Trust proxy is REQUIRED for Render to set secure cookies properly
+app.set('trust proxy', 1);
+
 // Enable CORS with credentials
 const allowedOrigins = [
   'http://localhost:5173',

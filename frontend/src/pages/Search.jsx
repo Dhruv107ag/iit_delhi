@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import api from '../api';
 import { SearchIcon, MapPin, Pill, Star, Clock } from 'lucide-react';
 import './Search.css';
@@ -128,7 +128,7 @@ export default function Search() {
                 <div key={item._id || idx} className="result-card glass-panel hover-grow">
                   
                   {queryType === 'medicines' && (
-                    <>
+                    <Link to={`/store/${item.storeId?._id || item.storeId}`} style={{textDecoration:'none', color:'inherit'}}>
                       <div className="card-badge success">
                         <Pill size={14} /> ₹{item.price}
                       </div>
@@ -139,15 +139,15 @@ export default function Search() {
                          <span className="stock-info text-success font-medium">
                            {item.quantity > 0 ? `${item.quantity} in stock` : 'Out of stock'}
                          </span>
-                         <span className="store-link text-primary text-sm flex gap-1">
+                         <span className="store-link text-primary text-sm flex gap-1 items-center" style={{fontWeight: 600}}>
                            <MapPin size={14}/> View Store
                          </span>
                       </div>
-                    </>
+                    </Link>
                   )}
 
                   {queryType === 'stores' && (
-                    <>
+                    <Link to={`/store/${item._id}`} style={{textDecoration:'none', color:'inherit', display:'block', height:'100%'}}>
                       <div className="card-badge primary">Verified Store</div>
                       <h3 className="card-title">{item.name}</h3>
                       <p className="card-desc flex gap-2 text-sm text-muted mb-2">
@@ -156,7 +156,10 @@ export default function Search() {
                       <p className="card-desc flex gap-2 text-sm text-muted">
                         <Clock size={16} /> {item.openingTime} - {item.closingTime}
                       </p>
-                    </>
+                      <div className="card-footer" style={{marginTop:'1rem', borderTop:'1px dashed #cbd5e1', paddingTop:'1rem'}}>
+                         <span className="text-primary font-medium flex items-center gap-1">Visit Pharmacy ➔</span>
+                      </div>
+                    </Link>
                   )}
 
                   {queryType === 'doctors' && (

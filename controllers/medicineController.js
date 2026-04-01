@@ -42,8 +42,11 @@ const addMedicine = async (req, res) => {
 // @access  Public
 const getAllMedicines = async (req, res) => {
   try {
+    const { storeId } = req.query;
+    const filter = storeId ? { storeId: storeId } : {};
+    
     // Populate storeId to include store details
-    const medicines = await Medicine.find().populate('storeId');
+    const medicines = await Medicine.find(filter).populate('storeId');
     res.status(200).json(medicines);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching medicines', error: error.message });

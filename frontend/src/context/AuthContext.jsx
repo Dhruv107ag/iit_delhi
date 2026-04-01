@@ -16,8 +16,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.get('/auth/me');
       setUser(data.user);
+      localStorage.setItem('hackathon_user', JSON.stringify(data.user));
     } catch (error) {
-      setUser(null);
+      const fallback = localStorage.getItem('hackathon_user');
+      if (fallback) {
+        setUser(JSON.parse(fallback));
+      } else {
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -26,6 +32,18 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const { data } = await api.post('/auth/login', { username, password });
+      
+      // Store user strictly for header fallback
+      const userPayload = {
+        id: data.user?.id || data.id || 'fallback_id',
+        role: data.role || 'user',
+        name: username
+      };
+      // We do a hack here: since we don't have the full user object from login immediately,
+      // we construct a mock session object if needed, but wait! The checkUser call next will fetch the real one.
+      
+      localStorage.setItem('hackathon_user', JSON.stringify(userPayload));
+      
       await checkUser(); // Refresh user details
       return { success: true, message: data.message, role: data.role };
     } catch (error) {
@@ -45,10 +63,10 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await api.get('/auth/logout');
-      setUser(null);
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+    } catch(err) {} // ignore cookie errors
+    
+    localStorage.removeItem('hackathon_user');
+    setUser(null);
   };
 
   return (

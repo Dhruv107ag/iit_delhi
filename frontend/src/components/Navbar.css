@@ -67,3 +67,17 @@
     display: block;
   }
 }
+
+@media (max-width: 480px) {
+  .brand-text {
+    font-size: 1.25rem;
+    display: none; /* Hide 'MediConnect' text on very small screens to fit buttons */
+  }
+  .nav-actions {
+    gap: var(--spacing-2);
+  }
+  .nav-actions .btn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 0.85rem;
+  }
+}

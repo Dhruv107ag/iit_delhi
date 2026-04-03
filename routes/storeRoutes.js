@@ -16,10 +16,10 @@ router.get('/', getStores);
 router.get('/search', searchStores);
 router.get('/:id', getStore);
 
-// Protected routes (store_owner only)
-router.post('/', requireAuth, requireRole('store_owner'), createStore);
-router.put('/:id', requireAuth, requireRole('store_owner'), updateStore);
-router.delete('/:id', requireAuth, requireRole('store_owner'), deleteStore);
+// Protected routes (store_owner and admin)
+router.post('/', requireAuth, requireRole('store_owner', 'admin'), createStore);
+router.put('/:id', requireAuth, requireRole('store_owner', 'admin'), updateStore);
+router.delete('/:id', requireAuth, requireRole('store_owner', 'admin'), deleteStore);
 
 module.exports = router;
 

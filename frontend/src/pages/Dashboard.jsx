@@ -25,6 +25,7 @@ export default function Dashboard() {
   }, [user, loading, navigate, activeTab]);
 
   const fetchMedicines = async () => {
+    if (!user?.id) return;
     setFetching(true);
     try {
       const { data } = await api.get('/medicines');
@@ -39,6 +40,7 @@ export default function Dashboard() {
   };
 
   const fetchDoctors = async () => {
+    if (!user?.id) return;
     setFetching(true);
     try {
       const { data } = await api.get('/doctors');

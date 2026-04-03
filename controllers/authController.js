@@ -99,7 +99,14 @@ const login = async (req, res) => {
       name: user.name || user.username
     };
 
-    res.status(200).json({ message: 'Login successful', role: user.role });
+    res.status(200).json({ 
+      message: 'Login successful', 
+      user: {
+        id: user._id,
+        role: user.role,
+        name: user.name || user.username
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error during login', error: error.message });
   }

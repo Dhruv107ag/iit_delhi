@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       setDoctors(d);
       
       try {
-        const revRes = await api.get('/api/reviews');
+        const revRes = await api.get('/reviews');
         const r = Array.isArray(revRes.data) ? revRes.data : [];
         setReviews(r);
         setStats({
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
       setNewStore({ name: '', address: '', phone: '', username: '', password: '' });
       setShowAddStore(false);
       fetchStores();
-      fetchStats();
+      fetchAll();
     } catch (err) {
       alert(err.response?.data?.message || 'Error adding store');
     }
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
       // In this setup, we use the store routes which should be updated to allow admin
       await api.delete(`/stores/${id}`);
       fetchStores();
-      fetchStats();
+      fetchAll();
     } catch (err) {
       alert('Error deleting store');
     }

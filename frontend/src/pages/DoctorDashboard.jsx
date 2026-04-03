@@ -12,6 +12,8 @@ export default function DoctorDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchingAppointments, setFetchingAppointments] = useState(false);
+  const [reviewsData, setReviewsData] = useState({ totalReviews: 0, averageRating: 0, reviews: [] });
+  const [fetchingReviews, setFetchingReviews] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -19,6 +21,7 @@ export default function DoctorDashboard() {
     } else if (user && user.role === 'doctor') {
       setDoctor(user);
       fetchAppointments(user.id || user._id);
+      fetchReviews(user.id || user._id);
       setLoading(false);
     } else if (user) {
       setLoading(false); // Not a doctor but authenticated
@@ -35,6 +38,18 @@ export default function DoctorDashboard() {
        console.error('Error fetching appointments:', err);
     } finally {
        setFetchingAppointments(false);
+    }
+  };
+
+  const fetchReviews = async (doctorId) => {
+    setFetchingReviews(true);
+    try {
+      const res = await api.get(`/reviews/doctor/${doctorId}`);
+      setReviewsData(res.data);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    } finally {
+      setFetchingReviews(false);
     }
   };
 
@@ -83,8 +98,8 @@ export default function DoctorDashboard() {
                 <span className="stat-label">Patients Today</span>
               </div>
               <div className="stat-item">
-                <span className="stat-value">4.9</span>
-                <span className="stat-label">Rating</span>
+                <span className="stat-value">{reviewsData.averageRating || 'N/A'}</span>
+                <span className="stat-label">Rating ({reviewsData.totalReviews} reviews)</span>
               </div>
             </div>
           </div>
@@ -146,6 +161,28 @@ export default function DoctorDashboard() {
                 <p>{doctor.description || 'Experienced medical professional dedicated to patient care.'}</p>
               </div>
             </div>
+          </div>
+
+          <div className="doctor-reviews glass-panel" style={{ gridColumn: '1 / -1' }}>
+            <h3>Patient Insights & Feedback</h3>
+            {fetchingReviews ? (
+               <div style={{ textAlign: 'center', padding: '1rem' }}><div className="loader"></div></div>
+            ) : reviewsData.reviews.length === 0 ? (
+               <p className="text-muted" style={{ padding: '1rem' }}>No reviews have been left by patients yet.</p>
+            ) : (
+               <div className="reviews-grid" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', marginTop: '1rem' }}>
+                 {reviewsData.reviews.map(rev => (
+                   <div key={rev._id} className="review-card" style={{ padding: '1rem', background: 'rgba(255,255,255,0.6)', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                     <div className="flex justify-between items-center mb-2">
+                       <strong className="text-sm text-slate-800">{rev.userId?.name || 'Anonymous User'}</strong>
+                       <span className="text-warning text-sm font-bold text-amber-500">★ {rev.rating}/5</span>
+                     </div>
+                     <p className="text-sm text-slate-600 mb-2">"{rev.comment}"</p>
+                     <span className="text-[10px] text-slate-400 block">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                   </div>
+                 ))}
+               </div>
+            )}
           </div>
         </div>
       </div>

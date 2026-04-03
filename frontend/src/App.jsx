@@ -13,6 +13,7 @@ import UserDashboard from './pages/UserDashboard';
 import StoreFront from './pages/StoreFront';
 import DoctorDashboard from './pages/DoctorDashboard';
 import Consultation from './pages/Consultation';
+import Chatbot from './components/Chatbot';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <Chatbot />
           </div>
         </CartProvider>
       </AuthProvider>

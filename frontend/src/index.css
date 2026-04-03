@@ -110,6 +110,13 @@ input, textarea {
   transition: all 0.2s ease;
 }
 
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+}
+
 .btn-primary {
   background-color: var(--color-primary);
   color: white;
@@ -140,6 +147,15 @@ input, textarea {
 
 .btn-outline:hover {
   background-color: var(--color-primary-light);
+}
+
+/* Utility Helpers */
+.flex-1 {
+  flex: 1;
+}
+
+.w-full {
+  width: 100%;
 }
 
 /* Animations Helpers */

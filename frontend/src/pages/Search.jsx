@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { SearchIcon, MapPin, Pill, Star, Clock } from 'lucide-react';
 import './Search.css';
 
 export default function Search() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [queryType, setQueryType] = useState(searchParams.get('tab') || 'medicines');
   const [results, setResults] = useState([]);
@@ -79,6 +80,28 @@ export default function Search() {
         alert('Your session has expired or you are not a patient. Please log in as a patient again.');
       } else {
         alert(err.response?.data?.message || 'Error booking appointment. Ensure you are logged in as a patient.');
+      }
+    } finally {
+      setBookingLoading(null);
+    }
+  };
+
+  const handleChatInitiation = async (doctorId) => {
+    setBookingLoading(doctorId);
+    try {
+      // Hits the find-or-create endpoint
+      const res = await api.post('/appointments', {
+        doctorId,
+        appointmentDate: new Date(),
+        reason: 'Consultation'
+      });
+      navigate(`/consultation?appointmentId=${res.data._id}`);
+    } catch (err) {
+      console.error('Chat error:', err);
+      if (err.response?.status === 401) {
+        alert('Your session has expired. Please log in as a patient to chat.');
+      } else {
+        alert('Error initiating chat session. Please try again.');
       }
     } finally {
       setBookingLoading(null);
@@ -202,13 +225,13 @@ export default function Search() {
                       <p className="card-desc text-primary font-medium mb-1">{item.specialization}</p>
                       <p className="card-desc text-sm text-muted mb-4">{item.experience} experience</p>
                       
-                      <div className="card-footer bg-light p-3 rounded">
-                        <p className="text-sm flex gap-2 mb-1"><Clock size={14}/> {item.timing}</p>
+                      <div className="card-footer bg-light p-3 rounded" style={{flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem'}}>
+                        <p className="text-sm flex gap-2 mb-1" style={{margin: 0}}><Clock size={14}/> {item.timing}</p>
                         <span className={`badge ${item.availability ? 'bg-success' : 'bg-danger'} text-white`}>
                           {item.availability ? 'Available for booking' : 'Currently Unavailable'}
                         </span>
                       </div>
-                      <div className="card-actions mt-3 flex gap-2">
+                      <div className="card-actions mt-3 flex gap-2" style={{flexWrap: 'wrap'}}>
                         <button 
                           className="btn btn-primary btn-sm flex-1" 
                           onClick={() => handleBookAppointment(item._id)}
@@ -222,7 +245,13 @@ export default function Search() {
                         >
                           Review
                         </button>
-                        <Link to={`/consultation/${item._id}`} className="btn btn-outline btn-sm flex-1">Chat</Link>
+                        <button 
+                          className="btn btn-outline btn-sm flex-1"
+                          onClick={() => handleChatInitiation(item._id)}
+                          disabled={bookingLoading === item._id || !item.availability}
+                        >
+                          Chat
+                        </button>
                       </div>
                     </>
                   )}

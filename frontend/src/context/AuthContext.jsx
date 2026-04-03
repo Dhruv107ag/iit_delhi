@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('hackathon_user', JSON.stringify(userPayload));
       
       await checkUser(); // Refresh user details
-      return { success: true, message: data.message, role: data.role };
+      return { success: true, message: data.message, role: data.user?.role || data.role };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Login failed' };
     }

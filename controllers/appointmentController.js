@@ -2,7 +2,7 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 
-// @desc    Create a new appointment
+// @desc    Create a new appointment (or return existing one)
 // @route   POST /api/appointments
 // @access  Private (Logged-in user)
 const createAppointment = async (req, res) => {
@@ -16,11 +16,22 @@ const createAppointment = async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
 
+    // Check if an appointment/session already exists between this user and doctor
+    const existingAppointment = await Appointment.findOne({
+      userId: req.session.user.id,
+      doctorId: doctorId
+    });
+
+    if (existingAppointment) {
+      console.log('[Appointment Existing] Found existing session ID:', existingAppointment._id);
+      return res.status(200).json(existingAppointment);
+    }
+
     const newAppointment = new Appointment({
       userId: req.session.user.id,
       doctorId,
       appointmentDate: appointmentDate || new Date(),
-      reason: reason || 'General Consultation'
+      reason: reason || 'Consultation'
     });
 
     const savedAppointment = await newAppointment.save();

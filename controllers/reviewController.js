@@ -2,6 +2,7 @@ const Review = require('../models/Review');
 const Medicine = require('../models/Medicine');
 const Doctor = require('../models/Doctor');
 const Store = require('../models/Store');
+const { extractUserData } = require('../middleware/authMiddleware');
 
 // @desc    Add a new review
 // @route   POST /api/reviews
@@ -47,6 +48,9 @@ const addReview = async (req, res) => {
     if (medicineId) reviewOpts.medicineId = medicineId;
     if (doctorId) reviewOpts.doctorId = doctorId;
     if (storeId) reviewOpts.storeId = storeId;
+    
+    const user = extractUserData(req);
+    if (user?.id) reviewOpts.userId = user.id;
 
     const newReview = new Review(reviewOpts);
     const savedReview = await newReview.save();
@@ -94,11 +98,32 @@ const getReviewsByStore = async (req, res) => {
 const getReviewsByDoctor = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const reviews = await Review.find({ doctorId, type: 'doctor' }).sort({ createdAt: -1 });
+    const reviews = await Review.find({ doctorId, type: 'doctor' })
+      .populate('userId', 'name')
+      .sort({ createdAt: -1 });
 
     res.status(200).json(formatReviewsResponse(reviews));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching doctor reviews', error: error.message });
+  }
+};
+
+// @desc    Get Reviews authored by User
+// @route   GET /api/reviews/user
+// @access  Private (Logged-in user)
+const getUserReviews = async (req, res) => {
+  try {
+    if (!req.session?.user) return res.status(401).json({ message: 'Not authenticated' });
+    
+    const reviews = await Review.find({ userId: req.session.user.id })
+      .populate('doctorId', 'name specialization')
+      .populate('medicineId', 'name')
+      .populate('storeId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(formatReviewsResponse(reviews));
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user reviews', error: error.message });
   }
 };
 
@@ -138,5 +163,6 @@ module.exports = {
   getReviewsByStore,
   getReviewsByDoctor,
   getReviewsByMedicine,
+  getUserReviews,
   getAllReviews
 };

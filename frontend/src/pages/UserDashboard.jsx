@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
-import { Search, Pill, Stethoscope, MapPin, Activity, LogOut, TrendingUp } from 'lucide-react';
+import { Search, Pill, Stethoscope, MapPin, Activity, LogOut, TrendingUp, MessageCircle } from 'lucide-react';
 import './UserDashboard.css';
 
 export default function UserDashboard() {
@@ -12,7 +12,7 @@ export default function UserDashboard() {
   const [medicines, setMedicines] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [stores, setStores] = useState([]);
-  const [reviews, setReviews] = useState([]);
+  const [reviewsData, setReviewsData] = useState({ reviews: [] });
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -21,6 +21,7 @@ export default function UserDashboard() {
     }
     if (!loading && user) {
       fetchStats();
+      fetchMyReviews();
     }
   }, [user, loading]);
 
@@ -41,10 +42,18 @@ export default function UserDashboard() {
       setStores(Array.isArray(parseStores) ? parseStores : []);
 
       // Fetch user reviews (mocked/endpoint if available)
-      // Since there's no direct 'my reviews' endpoint, we skip for now 
-      // but add the UI area for consistency.
+      // Done independently in fetchMyReviews
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
+    }
+  };
+
+  const fetchMyReviews = async () => {
+    try {
+      const res = await api.get('/reviews/user');
+      setReviewsData(res.data || { reviews: [] });
+    } catch (err) {
+      console.error('Error fetching my reviews:', err);
     }
   };
 
@@ -117,6 +126,10 @@ export default function UserDashboard() {
             <h3><MapPin size={20} color="#9333ea"/> Explore Pharmacies</h3>
             <p>Discover pharmacies in your locality with their timings, contact info, and inventory.</p>
           </Link>
+          <Link to="/consultation" className="quick-link-card" style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', borderColor: '#bbf7d0' }}>
+            <h3><MessageCircle size={20} color="#15803d"/> My Consultations</h3>
+            <p>Access your securely encrypted active chat sessions with healthcare professionals.</p>
+          </Link>
         </div>
         {/* Recent Medicines Section */}
         <div className="user-recent-section">
@@ -148,7 +161,26 @@ export default function UserDashboard() {
         <div className="user-recent-section mt-4">
           <h2><Activity size={20} color="#f59e0b"/> My Recent feedback</h2>
           <div className="glass-panel p-4" style={{ borderRadius: '15px' }}>
-            <p className="text-muted">You haven't left any reviews yet. Your recently posted reviews will appear here.</p>
+            {(!reviewsData.reviews || reviewsData.reviews.length === 0) ? (
+              <p className="text-muted">You haven't left any reviews yet. Your recently posted reviews will appear here.</p>
+            ) : (
+              <div className="user-reviews-list" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                {reviewsData.reviews.map(rev => (
+                  <div key={rev._id} className="review-card" style={{ padding: '1rem', background: 'rgba(255,255,255,0.7)', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                     <div className="flex justify-between items-center mb-2">
+                       <strong className="text-sm font-bold text-slate-800">
+                         {rev.type === 'doctor' ? `Dr. ${rev.doctorId?.name || 'Unknown'}` : 
+                          rev.type === 'store' ? rev.storeId?.name : 
+                          rev.medicineId?.name}
+                       </strong>
+                       <span className="text-amber-500 font-bold text-sm">★ {rev.rating}</span>
+                     </div>
+                     <p className="text-sm text-slate-600 mb-1">"{rev.comment}"</p>
+                     <p className="text-[10px] text-slate-400 uppercase font-bold">{new Date(rev.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

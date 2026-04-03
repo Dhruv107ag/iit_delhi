@@ -34,7 +34,7 @@ export default function Navbar() {
           {user ? (
             <>
               <Link 
-                to={user.role === 'admin' ? '/admin' : user.role === 'store_owner' ? '/store-dashboard' : '/user-dashboard'} 
+                to={user.role === 'admin' ? '/admin' : user.role === 'doctor' ? '/doctor-dashboard' : user.role === 'store_owner' ? '/store-dashboard' : '/user-dashboard'} 
                 className="btn btn-outline"
               >
                 Dashboard

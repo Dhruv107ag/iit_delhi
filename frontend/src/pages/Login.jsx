@@ -24,6 +24,8 @@ export default function Login() {
          navigate('/admin');
       } else if (result.role === 'user') {
          navigate('/user-dashboard');
+      } else if (result.role === 'doctor') {
+         navigate('/doctor-dashboard');
       } else {
          navigate('/store-dashboard'); // Store owner dashboard
       }

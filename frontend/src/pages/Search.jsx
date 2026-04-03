@@ -11,6 +11,7 @@ export default function Search() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [bookingLoading, setBookingLoading] = useState(null);
 
   // Read tab from URL query param
   useEffect(() => {
@@ -34,35 +35,21 @@ export default function Search() {
       if (queryType === 'medicines') {
         endpoint = searchTerm ? `/medicines/search?q=${searchTerm}` : `/medicines`;
       } else if (queryType === 'stores') {
-        endpoint = `/stores`;
+        endpoint = searchTerm ? `/stores/search?q=${searchTerm}` : `/stores`;
       } else if (queryType === 'doctors') {
-        endpoint = `/doctors`;
+        endpoint = searchTerm ? `/doctors/search?q=${searchTerm}` : `/doctors`;
       }
 
-      const response = await api.get(endpoint);
+      const { data } = await api.get(endpoint);
       
+      // Standardize data extraction from different possible response formats
       let dataList = [];
-      // Flatten depending on how backend sends it
-      if (response.data.data) {
-         dataList = response.data.data;
-      } else if (Array.isArray(response.data)) {
-         dataList = response.data;
-      } else if (response.data.medicines) {
-         dataList = response.data.medicines;
-      } else if (response.data.stores) {
-         dataList = response.data.stores;
-      } else if (response.data.doctors) {
-         dataList = response.data.doctors;
-      }
-
-      // Client side fallback filter if API didn't filter
-      if (searchTerm && queryType !== 'medicines') {
-        const lowerTerm = searchTerm.toLowerCase();
-        dataList = dataList.filter(item => 
-          item.name?.toLowerCase().includes(lowerTerm) || 
-          item.specialization?.toLowerCase().includes(lowerTerm) ||
-          item.address?.toLowerCase().includes(lowerTerm)
-        );
+      if (Array.isArray(data)) {
+        dataList = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        dataList = data.data;
+      } else if (data.medicines || data.stores || data.doctors) {
+        dataList = data.medicines || data.stores || data.doctors;
       }
       
       setResults(dataList || []);
@@ -71,6 +58,27 @@ export default function Search() {
       setError('Failed to fetch data. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBookAppointment = async (doctorId) => {
+    setBookingLoading(doctorId);
+    try {
+      await api.post('/appointments', {
+        doctorId,
+        appointmentDate: new Date(),
+        reason: 'Consultation'
+      });
+      alert('Appointment booked successfully! You can now chat with the doctor in your dashboard.');
+    } catch (err) {
+      console.error('Booking error:', err);
+      if (err.response?.status === 401) {
+        alert('Your session has expired or you are not a patient. Please log in as a patient again.');
+      } else {
+        alert(err.response?.data?.message || 'Error booking appointment. Ensure you are logged in as a patient.');
+      }
+    } finally {
+      setBookingLoading(null);
     }
   };
 
@@ -175,6 +183,16 @@ export default function Search() {
                         <span className={`badge ${item.availability ? 'bg-success' : 'bg-danger'} text-white`}>
                           {item.availability ? 'Available for booking' : 'Currently Unavailable'}
                         </span>
+                      </div>
+                      <div className="card-actions mt-3 flex gap-2">
+                        <button 
+                          className="btn btn-primary btn-sm flex-1" 
+                          onClick={() => handleBookAppointment(item._id)}
+                          disabled={bookingLoading === item._id || !item.availability}
+                        >
+                          {bookingLoading === item._id ? 'Booking...' : 'Book Now'}
+                        </button>
+                        <Link to={`/consultation/${item._id}`} className="btn btn-outline btn-sm flex-1">Chat</Link>
                       </div>
                     </>
                   )}

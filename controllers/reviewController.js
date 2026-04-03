@@ -116,9 +116,27 @@ const getReviewsByMedicine = async (req, res) => {
   }
 };
 
+// @desc    Get All Reviews (Admin only)
+// @route   GET /api/reviews
+// @access  Private (Admin)
+const getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('medicineId', 'name')
+      .populate('doctorId', 'name')
+      .populate('storeId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching reviews', error: error.message });
+  }
+};
+
 module.exports = {
   addReview,
   getReviewsByStore,
   getReviewsByDoctor,
-  getReviewsByMedicine
+  getReviewsByMedicine,
+  getAllReviews
 };

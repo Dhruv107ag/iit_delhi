@@ -12,6 +12,7 @@ app.set('trust proxy', 1);
 // Enable CORS with credentials
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -35,8 +36,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true, // Required for cross-site cookies
-    sameSite: 'none', // Required for cross-site cookies
+    secure: process.env.NODE_ENV === 'production', // Use secure in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
@@ -49,6 +50,7 @@ const storeRoutes = require('./routes/storeRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -58,6 +60,7 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

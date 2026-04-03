@@ -93,10 +93,35 @@ const deleteStore = async (req, res) => {
   }
 };
 
+// @desc    Search stores by name or address
+// @route   GET /api/stores/search?q=query
+// @access  Public
+const searchStores = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const regex = new RegExp(q, 'i');
+    const stores = await Store.find({
+      $or: [
+        { name: regex },
+        { address: regex }
+      ]
+    });
+
+    res.status(200).json(stores);
+  } catch (error) {
+    res.status(500).json({ message: 'Error searching stores', error: error.message });
+  }
+};
+
 module.exports = {
   createStore,
   getStores,
   getStore,
   updateStore,
-  deleteStore
+  deleteStore,
+  searchStores
 };

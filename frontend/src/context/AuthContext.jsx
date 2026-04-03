@@ -18,12 +18,9 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       localStorage.setItem('hackathon_user', JSON.stringify(data.user));
     } catch (error) {
-      const fallback = localStorage.getItem('hackathon_user');
-      if (fallback) {
-        setUser(JSON.parse(fallback));
-      } else {
-        setUser(null);
-      }
+      // If server returns error (401), we MUST clear local state
+      setUser(null);
+      localStorage.removeItem('hackathon_user');
     } finally {
       setLoading(false);
     }
@@ -35,9 +32,9 @@ export const AuthProvider = ({ children }) => {
       
       // Store user strictly for header fallback
       const userPayload = {
-        id: data.user?.id || data.id || 'fallback_id',
-        role: data.role || 'user',
-        name: username
+        id: data.user?.id || data.user?._id || data.id || data._id,
+        role: data.user?.role || data.role || 'user',
+        name: data.user?.name || username
       };
       // We do a hack here: since we don't have the full user object from login immediately,
       // we construct a mock session object if needed, but wait! The checkUser call next will fetch the real one.

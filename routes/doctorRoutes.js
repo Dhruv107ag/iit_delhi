@@ -5,10 +5,13 @@ const {
   getDoctors,
   getDoctor,
   updateDoctor,
-  deleteDoctor
+  deleteDoctor,
+  searchDoctors
 } = require('../controllers/doctorController');
 
 // Standard CRUD operations
+router.get('/search', searchDoctors);
+
 router.route('/')
   .post(addDoctor)
   .get(getDoctors);

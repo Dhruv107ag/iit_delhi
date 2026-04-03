@@ -199,6 +199,45 @@ const getTrendingMedicines = async (req, res) => {
   }
 };
 
+// @desc    Checkout medicines (decrement quantity)
+// @route   POST /api/medicines/checkout
+// @access  Public
+const checkoutMedicines = async (req, res) => {
+  try {
+    const { items } = req.body; // Array of { id, quantity }
+    
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({ message: 'Invalid items array' });
+    }
+
+    // Step 1: Validate stock for ALL items first
+    for (const item of items) {
+      const med = await Medicine.findById(item.id);
+      if (!med) {
+        return res.status(404).json({ message: `Medicine with ID ${item.id} not found` });
+      }
+      if (med.quantity < item.quantity) {
+        return res.status(400).json({ 
+          message: `Insufficient stock for ${med.name}. Available: ${med.quantity}, Requested: ${item.quantity}` 
+        });
+      }
+    }
+
+    // Step 2: If all valid, process the updates
+    const updatePromises = items.map(async (item) => {
+      const med = await Medicine.findById(item.id);
+      med.quantity = med.quantity - item.quantity;
+      med.status = med.quantity === 0 ? 'Out of Stock' : 'Available';
+      return med.save();
+    });
+
+    await Promise.all(updatePromises);
+    res.status(200).json({ message: 'Checkout successful and stock updated' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error during checkout', error: error.message });
+  }
+};
+
 module.exports = {
   addMedicine,
   getAllMedicines,
@@ -207,5 +246,6 @@ module.exports = {
   deleteMedicine,
   searchMedicines,
   getSuggestions,
-  getTrendingMedicines
+  getTrendingMedicines,
+  checkoutMedicines
 };

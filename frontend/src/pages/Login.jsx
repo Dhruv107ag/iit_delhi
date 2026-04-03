@@ -25,7 +25,7 @@ export default function Login() {
       } else if (result.role === 'user') {
          navigate('/user-dashboard');
       } else {
-         navigate('/dashboard'); // Store owner dashboard
+         navigate('/store-dashboard'); // Store owner dashboard
       }
     } else {
       setError(result.message);

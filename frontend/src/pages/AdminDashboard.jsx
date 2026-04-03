@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { ShieldCheck, Pill, MapPin, Stethoscope, Star, LogOut, Trash2, Users } from 'lucide-react';
+import { ShieldCheck, Pill, MapPin, Stethoscope, Star, LogOut, Trash2, Users, Plus } from 'lucide-react';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -13,7 +13,10 @@ export default function AdminDashboard() {
   const [stores, setStores] = useState([]);
   const [medicines, setMedicines] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [activeTab, setActiveTab] = useState('stores');
+  const [showAddStore, setShowAddStore] = useState(false);
+  const [newStore, setNewStore] = useState({ name: '', address: '', phone: '', username: '', password: '' });
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) {
@@ -39,14 +42,67 @@ export default function AdminDashboard() {
       setStores(s);
       setMedicines(m);
       setDoctors(d);
-      setStats({
-        totalStores: s.length,
-        totalMedicines: m.length,
-        totalDoctors: d.length,
-        totalReviews: 0
-      });
+      
+      try {
+        const revRes = await api.get('/api/reviews');
+        const r = Array.isArray(revRes.data) ? revRes.data : [];
+        setReviews(r);
+        setStats({
+          totalStores: s.length,
+          totalMedicines: m.length,
+          totalDoctors: d.length,
+          totalReviews: r.length
+        });
+      } catch (err) {
+        setStats({
+          totalStores: s.length,
+          totalMedicines: m.length,
+          totalDoctors: d.length,
+          totalReviews: 0
+        });
+      }
     } catch (err) {
       console.error('Admin fetch error:', err);
+    }
+  };
+
+  const fetchStores = async () => {
+    try {
+      const res = await api.get('/stores');
+      setStores(res.data);
+    } catch (err) {
+      console.error('Error fetching stores:', err);
+    }
+  };
+
+  const handleAddStore = async (e) => {
+    e.preventDefault();
+    try {
+      // Note: Defaulting times for admin-created stores
+      await api.post('/auth/register', {
+        ...newStore,
+        role: 'store_owner',
+        openingTime: '09:00 AM',
+        closingTime: '10:00 PM'
+      });
+      setNewStore({ name: '', address: '', phone: '', username: '', password: '' });
+      setShowAddStore(false);
+      fetchStores();
+      fetchStats();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error adding store');
+    }
+  };
+
+  const handleDeleteStore = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this store?')) return;
+    try {
+      // In this setup, we use the store routes which should be updated to allow admin
+      await api.delete(`/stores/${id}`);
+      fetchStores();
+      fetchStats();
+    } catch (err) {
+      alert('Error deleting store');
     }
   };
 
@@ -114,7 +170,48 @@ export default function AdminDashboard() {
           <button className={`admin-action-btn ${activeTab === 'doctors' ? 'primary' : ''}`} onClick={() => setActiveTab('doctors')}>
             <Stethoscope size={16}/> Doctors
           </button>
+          <button className={`admin-action-btn ${activeTab === 'reviews' ? 'primary' : ''}`} onClick={() => setActiveTab('reviews')}>
+            <Star size={16}/> Reviews
+          </button>
+          <button className="admin-action-btn success" style={{ marginLeft: 'auto' }} onClick={() => setShowAddStore(true)}>
+            <Plus size={16}/> Add Store
+          </button>
         </div>
+
+        {/* Add Store Modal */}
+        {showAddStore && (
+          <div className="admin-modal-overlay">
+            <div className="admin-modal glass-panel">
+              <h2>Register New Pharmacy</h2>
+              <form onSubmit={handleAddStore}>
+                <div className="input-group">
+                  <label>Store Name</label>
+                  <input type="text" required value={newStore.name} onChange={e => setNewStore({...newStore, name: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Address</label>
+                  <input type="text" required value={newStore.address} onChange={e => setNewStore({...newStore, address: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Phone</label>
+                  <input type="text" required value={newStore.phone} onChange={e => setNewStore({...newStore, phone: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Username</label>
+                  <input type="text" required value={newStore.username} onChange={e => setNewStore({...newStore, username: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label>Password</label>
+                  <input type="password" required value={newStore.password} onChange={e => setNewStore({...newStore, password: e.target.value})} />
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="admin-action-btn" onClick={() => setShowAddStore(false)}>Cancel</button>
+                  <button type="submit" className="admin-action-btn primary">Create Store</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         {activeTab === 'stores' && (
@@ -122,7 +219,7 @@ export default function AdminDashboard() {
             <h2><MapPin size={18} color="var(--color-primary)"/> Registered Pharmacies</h2>
             <div style={{ overflowX: 'auto' }}>
               <table className="admin-table">
-                <thead><tr><th>Name</th><th>Address</th><th>Phone</th><th>Timings</th><th>Username</th></tr></thead>
+                <thead><tr><th>Name</th><th>Address</th><th>Phone</th><th>Timings</th><th>Username</th><th>Action</th></tr></thead>
                 <tbody>
                   {stores.map((s, i) => (
                     <tr key={s._id || i}>
@@ -131,6 +228,11 @@ export default function AdminDashboard() {
                       <td>{s.phone}</td>
                       <td>{s.openingTime} - {s.closingTime}</td>
                       <td><code>{s.username}</code></td>
+                      <td>
+                        <button className="admin-action-btn danger" onClick={() => handleDeleteStore(s._id)}>
+                          <Trash2 size={14}/> Remove
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {stores.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', color: '#94a3b8' }}>No stores found</td></tr>}
@@ -188,6 +290,34 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === 'reviews' && (
+          <div className="admin-section">
+            <h2><Star size={18} color="#fbbf24"/> All User Feedback</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead><tr><th>Type</th><th>Target</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
+                <tbody>
+                  {reviews.map((r, i) => (
+                    <tr key={r._id || i}>
+                      <td><span className={`badge ${r.type === 'store' ? 'bg-primary' : 'bg-info'} text-white`}>{r.type}</span></td>
+                      <td style={{ fontWeight: 600 }}>{r.storeId?.name || r.doctorId?.name || r.medicineId?.name || 'Unknown'}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={12} fill={i < r.rating ? "#fbbf24" : "none"} stroke={i < r.rating ? "#fbbf24" : "#94a3b8"} />
+                          ))}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: '0.85rem' }}>{r.comment}</td>
+                      <td style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                  {reviews.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', color: '#94a3b8' }}>No feedback found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

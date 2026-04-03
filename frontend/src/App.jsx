@@ -11,6 +11,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
 import UserDashboard from './pages/UserDashboard';
 import StoreFront from './pages/StoreFront';
+import DoctorDashboard from './pages/DoctorDashboard';
+import Consultation from './pages/Consultation';
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
                 <Route path="/store-dashboard" element={<Dashboard />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
                 <Route path="/store/:id" element={<StoreFront />} />
+                <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+                <Route path="/consultation" element={<Consultation />} />
                 <Route path="*" element={<Landing />} />
               </Routes>
             </main>

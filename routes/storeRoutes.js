@@ -5,13 +5,15 @@ const {
   getStores,
   getStore,
   updateStore,
-  deleteStore
+  deleteStore,
+  searchStores
 } = require('../controllers/storeController');
 
 const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 
 // Public routes (for Search page)
 router.get('/', getStores);
+router.get('/search', searchStores);
 router.get('/:id', getStore);
 
 // Protected routes (store_owner only)

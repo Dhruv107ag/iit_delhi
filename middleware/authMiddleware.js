@@ -1,9 +1,14 @@
 const extractUserData = (req) => {
+  let user = null;
   const customUser = req.headers['x-user-data'];
   if (customUser) {
-    try { return JSON.parse(customUser); } catch(e) {}
+    try { user = JSON.parse(customUser); } catch(e) { console.error('JSON Parse error on x-user-data:', e); }
   }
-  return req.session?.user;
+  if (!user && req.session?.user) {
+    user = req.session.user;
+  }
+  console.log(`[Auth Check] Path: ${req.path}, User ID: ${user?.id || 'null'}, Role: ${user?.role || 'null'}`);
+  return user;
 };
 
 const requireAuth = (req, res, next) => {

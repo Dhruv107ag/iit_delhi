@@ -4,8 +4,13 @@ const {
   addReview,
   getReviewsByStore,
   getReviewsByDoctor,
-  getReviewsByMedicine
+  getReviewsByMedicine,
+  getAllReviews
 } = require('../controllers/reviewController');
+const { requireAuth, requireRole } = require('../middleware/authMiddleware');
+
+// Get all reviews (Admin only)
+router.get('/', requireAuth, requireRole('admin'), getAllReviews);
 
 // Add a new review
 router.post('/', addReview);

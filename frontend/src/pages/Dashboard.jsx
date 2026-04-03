@@ -11,6 +11,7 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] = useState('medicines');
   const [medicines, setMedicines] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [fetching, setFetching] = useState(false);
   const [newItem, setNewItem] = useState({});
 
@@ -18,19 +19,32 @@ export default function Dashboard() {
     if (!loading && !user) {
       navigate('/login');
     } else if (user && user.role === 'store_owner') {
-      fetchMedicines();
+      if (activeTab === 'medicines') fetchMedicines();
+      if (activeTab === 'doctors') fetchDoctors();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, activeTab]);
 
   const fetchMedicines = async () => {
     setFetching(true);
     try {
       const { data } = await api.get('/medicines');
-      
       let list = data.data || data.medicines || data || [];
-      // Hackathon filter: Since there's no auth route per store in backend, just show all or filter if property exists
-      list = list.filter(m => !m.storeId || m.storeId === user.id || true); 
+      list = list.filter(m => !m.storeId || m.storeId._id === user.id || m.storeId === user.id); 
       setMedicines(list);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    setFetching(true);
+    try {
+      const { data } = await api.get('/doctors');
+      let list = data.data || data.doctors || data || [];
+      list = list.filter(d => (d.storeId && (d.storeId._id === user.id || d.storeId === user.id)));
+      setDoctors(list);
     } catch (err) {
       console.error(err);
     } finally {
@@ -50,9 +64,14 @@ export default function Dashboard() {
          await api.post('/medicines', { ...newItem, storeId: user.id });
          setNewItem({});
          fetchMedicines();
+      } else if (activeTab === 'doctors') {
+         await api.post('/doctors', { ...newItem, storeId: user.id });
+         setNewItem({});
+         fetchDoctors();
       }
     } catch(err) {
-      alert('Failed to create item');
+      console.error(err);
+      alert('Failed to create. Check if username is already taken or fields are missing.');
     }
   };
 
@@ -113,9 +132,13 @@ export default function Dashboard() {
                 </>
               ) : (
                 <>
-                  <input type="text" placeholder="Doctor Name" className="input-field" required value={newItem.name || ''} onChange={(e) => setNewItem({...newItem, name: e.target.value})} />
+                  <input type="text" placeholder="Dr. Full Name" className="input-field" required value={newItem.name || ''} onChange={(e) => setNewItem({...newItem, name: e.target.value})} />
                   <input type="text" placeholder="Specialization" className="input-field" required value={newItem.specialization || ''} onChange={(e) => setNewItem({...newItem, specialization: e.target.value})} />
-                  <input type="text" placeholder="Timing (e.g. 10 AM - 2 PM)" className="input-field" required value={newItem.timing || ''} onChange={(e) => setNewItem({...newItem, timing: e.target.value})} />
+                  <input type="text" placeholder="Timing (e.g. 10 AM - 4 PM)" className="input-field" required value={newItem.timing || ''} onChange={(e) => setNewItem({...newItem, timing: e.target.value})} />
+                  <div className="flex gap-2 w-full">
+                    <input type="text" placeholder="Choose Username" className="input-field" required value={newItem.username || ''} onChange={(e) => setNewItem({...newItem, username: e.target.value})} />
+                    <input type="password" placeholder="Set Password" className="input-field" required value={newItem.password || ''} onChange={(e) => setNewItem({...newItem, password: e.target.value})} />
+                  </div>
                 </>
               )}
               <button type="submit" className="btn btn-primary" style={{ height: '100%', borderRadius: 'var(--radius-md)' }}>Save</button>
@@ -123,7 +146,7 @@ export default function Dashboard() {
           </div>
 
           <div className="dashboard-card glass-panel shadow-md mt-6">
-             <h3 className="card-title mb-4">Current Inventory</h3>
+             <h3 className="card-title mb-4">Current {activeTab === 'medicines' ? 'Inventory' : 'Doctors'}</h3>
              
              {fetching ? ( <Loader size={24} className="spin text-primary margin-auto" /> ) : (
                <div className="data-table-wrapper">
@@ -137,16 +160,23 @@ export default function Dashboard() {
                      </tr>
                    </thead>
                    <tbody>
-                     {activeTab === 'medicines' ? medicines.map((m, i) => (
-                       <tr key={i}>
-                         <td className="font-medium">{m.name}</td>
-                         <td>{m.quantity}</td>
-                         <td>₹{m.price}</td>
-                         <td><span className={`badge ${m.quantity > 0 ? 'bg-success' : 'bg-danger'} text-white`}>{m.quantity > 0 ? 'In Stock' : 'Empty'}</span></td>
-                       </tr>
-                     )) : (
-                       <tr><td colSpan="4" className="text-center text-muted">No doctors found.</td></tr>
-                     )}
+                      {activeTab === 'medicines' ? medicines.map((m, i) => (
+                        <tr key={i}>
+                          <td className="font-medium">{m.name}</td>
+                          <td>{m.quantity}</td>
+                          <td>₹{m.price}</td>
+                          <td><span className={`badge ${m.quantity > 0 ? 'bg-success' : 'bg-danger'} text-white`}>{m.quantity > 0 ? 'In Stock' : 'Empty'}</span></td>
+                        </tr>
+                      )) : doctors.length > 0 ? doctors.map((d, i) => (
+                        <tr key={i}>
+                          <td className="font-medium">{d.name}</td>
+                          <td>{d.specialization}</td>
+                          <td>{d.timing}</td>
+                          <td><span className={`badge bg-primary text-white`}>{d.availability ? 'Available' : 'Busy'}</span></td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="4" className="text-center text-muted">No {activeTab} found for your pharmacy.</td></tr>
+                      )}
                    </tbody>
                  </table>
                </div>

@@ -1,4 +1,5 @@
 import { useContext, useState } from 'react';
+import api from '../api';
 import { CartContext } from '../context/CartContext';
 import { X, Bike, Store as StoreIcon, Trash2, Tag, ShoppingBag } from 'lucide-react';
 import './CartSidebar.css';
@@ -45,10 +46,22 @@ export default function CartSidebar({ isOpen, onClose }) {
     }
   };
 
-  const handleCheckout = () => {
-    alert(`Order Placed Successfully! (Demo) 🎉\nAmount to pay: ₹${grandTotal}`);
-    clearCart();
-    onClose();
+  const handleCheckout = async () => {
+    try {
+      const itemsToCheckout = cartItems.map(item => ({
+        id: item._id,
+        quantity: item.cartQty
+      }));
+
+      await api.post('/medicines/checkout', { items: itemsToCheckout });
+      
+      alert(`Order Placed Successfully! 🎉\nAmount to pay: ₹${grandTotal}\nStock updated.`);
+      clearCart();
+      onClose();
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      alert('Checkout failed. Please try again.');
+    }
   };
 
   return (

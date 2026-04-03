@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.env
+.DS_Store
+
+# Frontend specifics (if built in root)
+dist/
+build/
+.next/
+.server/
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Git state
+.vercel/
+.gemini/

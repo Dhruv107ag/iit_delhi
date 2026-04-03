@@ -1,12 +1,24 @@
 const Doctor = require('../models/Doctor');
 const Store = require('../models/Store');
+const bcrypt = require('bcryptjs');
 
 // @desc    Add a new doctor
 // @route   POST /api/doctors
 // @access  Public
 const addDoctor = async (req, res) => {
   try {
-    const { name, specialization, experience, description, timing, storeId } = req.body;
+    const { name, specialization, experience, description, timing, storeId, username, password } = req.body;
+
+    // Validate required fields
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    // Check if doctor already exists
+    const existingDoctor = await Doctor.findOne({ username });
+    if (existingDoctor) {
+      return res.status(400).json({ message: 'Username already taken' });
+    }
 
     // Validate that storeId exists
     if (!storeId) {
@@ -18,14 +30,19 @@ const addDoctor = async (req, res) => {
       return res.status(404).json({ message: 'Store not found' });
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newDoctor = new Doctor({
       name,
+      username,
+      password: hashedPassword,
       specialization,
       experience,
       description,
       timing,
       storeId
-      // availability defaults to true in schema
     });
 
     const savedDoctor = await newDoctor.save();
@@ -106,10 +123,35 @@ const deleteDoctor = async (req, res) => {
   }
 };
 
+// @desc    Search doctors by name or specialization
+// @route   GET /api/doctors/search?q=query
+// @access  Public
+const searchDoctors = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const regex = new RegExp(q, 'i');
+    const doctors = await Doctor.find({
+      $or: [
+        { name: regex },
+        { specialization: regex }
+      ]
+    }).populate('storeId');
+
+    res.status(200).json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: 'Error searching doctors', error: error.message });
+  }
+};
+
 module.exports = {
   addDoctor,
   getDoctors,
   getDoctor,
   updateDoctor,
-  deleteDoctor
+  deleteDoctor,
+  searchDoctors
 };

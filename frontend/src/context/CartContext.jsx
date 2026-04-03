@@ -12,12 +12,15 @@ export const CartProvider = ({ children }) => {
   const [couponCode, setCouponCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
 
+  const [cartError, setCartError] = useState(null);
+
   // Sync to localstorage
   useEffect(() => {
     localStorage.setItem('mc_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (medicine, store) => {
+    setCartError(null);
     setCartItems(prev => {
       // Prevent adding items from different stores
       if (prev.length > 0) {
@@ -26,7 +29,7 @@ export const CartProvider = ({ children }) => {
          const newStoreId = typeof store._id === 'object' ? store._id : store._id;
          
          if (currentStoreId !== newStoreId) {
-           alert("You can only order from one pharmacy at a time. Clear cart to switch stores.");
+           setCartError("You can only order from one pharmacy at a time. Clear cart to switch stores.");
            return prev; // Cancel addition
          }
       }
@@ -34,7 +37,7 @@ export const CartProvider = ({ children }) => {
       const existingItem = prev.find(item => item._id === medicine._id);
       if (existingItem) {
         if (existingItem.cartQty >= medicine.quantity) {
-          alert('Maximum stock reached!');
+          setCartError('Maximum stock reached for this item!');
           return prev;
         }
         return prev.map(item => 
@@ -52,13 +55,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = (medicineId, change) => {
+    setCartError(null);
     setCartItems(prev => {
       return prev.map(item => {
         if (item._id === medicineId) {
           const newQty = item.cartQty + change;
           if (newQty < 1) return item; // Handled by remove button explicitly if needed
           if (newQty > item.quantity) {
-             alert('Maximum stock reached!');
+             setCartError('Maximum stock reached!');
              return item;
           }
           return { ...item, cartQty: newQty };
@@ -68,7 +72,10 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  const clearCartError = () => setCartError(null);
+
   const applyCoupon = (code) => {
+    setCartError(null);
     const upperCode = code.trim().toUpperCase();
     if (upperCode === 'HACK50') {
       setDiscountPercent(50);
@@ -90,6 +97,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => {
     setCartItems([]);
     removeCoupon();
+    setCartError(null);
   };
 
   return (
@@ -104,7 +112,9 @@ export const CartProvider = ({ children }) => {
       couponCode,
       applyCoupon,
       removeCoupon,
-      discountPercent
+      discountPercent,
+      cartError,
+      clearCartError
     }}>
       {children}
     </CartContext.Provider>

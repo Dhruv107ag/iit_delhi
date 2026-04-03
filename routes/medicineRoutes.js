@@ -8,13 +8,15 @@ const {
   getAllMedicines,
   getSingleMedicine,
   updateMedicine,
-  deleteMedicine
+  deleteMedicine,
+  checkoutMedicines
 } = require('../controllers/medicineController');
 
 // Define static routes first to prevent conflicts with /:id
 router.get('/search', searchMedicines);
 router.get('/suggestions', getSuggestions);
 router.get('/trending', getTrendingMedicines);
+router.post('/checkout', checkoutMedicines);
 
 // Standard CRUD operations
 router.route('/')

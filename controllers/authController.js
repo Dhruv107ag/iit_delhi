@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const Store = require('../models/Store');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 // @desc    Register a new store or user
 // @route   POST /api/auth/register
@@ -14,8 +15,9 @@ const register = async (req, res) => {
     const existingStore = await Store.findOne({ username });
     const existingAdmin = await Admin.findOne({ username });
     const existingUser = await User.findOne({ username });
+    const existingDoctor = await Doctor.findOne({ username });
 
-    if (existingStore || existingAdmin || existingUser) {
+    if (existingStore || existingAdmin || existingUser || existingDoctor) {
       return res.status(400).json({ message: 'Username already taken' });
     }
 
@@ -32,6 +34,15 @@ const register = async (req, res) => {
       });
       await newUser.save();
       return res.status(201).json({ message: 'User registered successfully' });
+    } else if (role === 'doctor') {
+      const newDoctor = new Doctor({
+        name,
+        username,
+        password: hashedPassword,
+        role: 'doctor'
+      });
+      await newDoctor.save();
+      return res.status(201).json({ message: 'Doctor registered successfully' });
     } else {
       // Default to store registration
       const newStore = new Store({
@@ -67,6 +78,10 @@ const login = async (req, res) => {
     
     if (!user) {
       user = await User.findOne({ username });
+    }
+
+    if (!user) {
+      user = await Doctor.findOne({ username });
     }
 
     if (!user) {

@@ -12,6 +12,7 @@ export default function UserDashboard() {
   const [medicines, setMedicines] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [stores, setStores] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -38,6 +39,10 @@ export default function UserDashboard() {
       setMedicines(Array.isArray(parseMeds) ? parseMeds : []);
       setDoctors(Array.isArray(parseDocs) ? parseDocs : []);
       setStores(Array.isArray(parseStores) ? parseStores : []);
+
+      // Fetch user reviews (mocked/endpoint if available)
+      // Since there's no direct 'my reviews' endpoint, we skip for now 
+      // but add the UI area for consistency.
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
     }
@@ -113,7 +118,6 @@ export default function UserDashboard() {
             <p>Discover pharmacies in your locality with their timings, contact info, and inventory.</p>
           </Link>
         </div>
-
         {/* Recent Medicines Section */}
         <div className="user-recent-section">
           <h2><TrendingUp size={20} color="var(--color-primary)"/> Available Medicines</h2>
@@ -138,6 +142,14 @@ export default function UserDashboard() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* User Reviews Section */}
+        <div className="user-recent-section mt-4">
+          <h2><Activity size={20} color="#f59e0b"/> My Recent feedback</h2>
+          <div className="glass-panel p-4" style={{ borderRadius: '15px' }}>
+            <p className="text-muted">You haven't left any reviews yet. Your recently posted reviews will appear here.</p>
+          </div>
         </div>
 
       </div>

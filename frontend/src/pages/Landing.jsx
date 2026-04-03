@@ -70,7 +70,7 @@ export default function Landing() {
                 placeholder="Search for medicines, doctors, or stores..." 
                 className="hero-input"
               />
-              <Link to="/search" className="btn btn-primary search-btn">Find Now</Link>
+              <Link to="/search?tab=medicines" className="btn btn-primary search-btn">Find Now</Link>
             </div>
 
             <div className="hero-stats">

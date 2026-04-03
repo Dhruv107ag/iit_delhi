@@ -73,8 +73,8 @@ export default function StoreFront() {
     setSubmittingReview(true);
     try {
       await api.post('/reviews', {
-        targetType: 'Store',
-        targetId: id,
+        type: 'store',
+        storeId: id,
         rating: newReview.rating,
         comment: newReview.comment
       });

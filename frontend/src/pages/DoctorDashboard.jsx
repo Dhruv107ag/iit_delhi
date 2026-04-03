@@ -103,14 +103,25 @@ export default function DoctorDashboard() {
                 appointments.map((app, i) => (
                   <div key={app._id || i} className="cons-item">
                     <div className="cons-info">
-                      <span className="patient-name">{app.userId?.name || 'Patient'}</span>
-                      <span className="cons-meta">
-                        <Clock size={12} style={{ display: 'inline', marginBottom: '-2px' }}/> {new Date(app.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {app.reason || 'Consultation'}
+                      <div className="flex justify-between items-start">
+                        <span className="patient-name font-bold text-slate-800">{app.userId?.name || 'Patient'}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-400">
+                          {new Date(app.appointmentDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <span className="cons-meta block mt-1 text-xs text-slate-500">
+                        <Clock size={12} className="inline mr-1 opacity-60"/> 
+                        {new Date(app.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {app.reason || 'Consultation'}
                       </span>
+                      {app.lastMessage && (
+                        <div className="mt-2 p-2 bg-slate-50 rounded border-l-2 border-green-500 text-xs text-slate-600 italic">
+                          "{app.lastMessage}"
+                        </div>
+                      )}
                     </div>
-                    <div className="cons-actions">
-                      <Link to={`/consultation?appointmentId=${app._id}`} className="btn btn-primary btn-sm flex items-center gap-1">
-                        <MessageSquare size={14}/> Chat
+                    <div className="cons-actions mt-3">
+                      <Link to={`/consultation?appointmentId=${app._id}`} className="btn btn-primary btn-sm w-full flex items-center justify-center gap-2">
+                        <MessageSquare size={14}/> Open WhatsApp Chat
                       </Link>
                     </div>
                   </div>

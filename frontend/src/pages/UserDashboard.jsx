@@ -105,15 +105,15 @@ export default function UserDashboard() {
 
         {/* Quick Action Cards */}
         <div className="user-quick-links">
-          <Link to="/search" className="quick-link-card">
+          <Link to="/search?tab=medicines" className="quick-link-card">
             <h3><Search size={20} color="#2563eb"/> Search Medicines</h3>
             <p>Find medicines by name, composition, or availability across all pharmacies in the network.</p>
           </Link>
-          <Link to="/search" className="quick-link-card" onClick={() => sessionStorage.setItem('defaultTab', 'doctors')}>
+          <Link to="/search?tab=doctors" className="quick-link-card">
             <h3><Stethoscope size={20} color="#16a34a"/> Find a Doctor</h3>
             <p>Browse verified doctors by specialization, timing, and availability near your area.</p>
           </Link>
-          <Link to="/search" className="quick-link-card" onClick={() => sessionStorage.setItem('defaultTab', 'stores')}>
+          <Link to="/search?tab=stores" className="quick-link-card">
             <h3><MapPin size={20} color="#9333ea"/> Explore Pharmacies</h3>
             <p>Discover pharmacies in your locality with their timings, contact info, and inventory.</p>
           </Link>

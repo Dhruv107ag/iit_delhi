@@ -83,7 +83,11 @@ const sendChatMessage = async (req, res) => {
     const appointment = await Appointment.findById(id);
     if (!appointment) return res.status(404).json({ message: 'Consultation session not found' });
 
-    appointment.chatHistory.push({ message, sender });
+    const newMessage = { message, sender, timestamp: new Date() };
+    appointment.chatHistory.push(newMessage);
+    appointment.lastMessage = message;
+    appointment.lastMessageTime = newMessage.timestamp;
+    
     await appointment.save();
 
     res.status(200).json(appointment);

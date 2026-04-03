@@ -7,11 +7,14 @@ import './Search.css';
 export default function Search() {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [queryType, setQueryType] = useState('medicines');
+  const [queryType, setQueryType] = useState(searchParams.get('tab') || 'medicines');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(null);
+  const [reviewDoctor, setReviewDoctor] = useState(null);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Read tab from URL query param
   useEffect(() => {
@@ -79,6 +82,27 @@ export default function Search() {
       }
     } finally {
       setBookingLoading(null);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewDoctor) return;
+    setSubmittingReview(true);
+    try {
+      await api.post('/reviews', {
+        type: 'doctor',
+        doctorId: reviewDoctor._id,
+        rating: newReview.rating,
+        comment: newReview.comment
+      });
+      alert('Thank you for your feedback!');
+      setReviewDoctor(null);
+      setNewReview({ rating: 5, comment: '' });
+    } catch (err) {
+      alert('Error submitting feedback. Please try again.');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -192,6 +216,12 @@ export default function Search() {
                         >
                           {bookingLoading === item._id ? 'Booking...' : 'Book Now'}
                         </button>
+                        <button 
+                          className="btn btn-outline btn-sm flex-1"
+                          onClick={() => setReviewDoctor(item)}
+                        >
+                          Review
+                        </button>
                         <Link to={`/consultation/${item._id}`} className="btn btn-outline btn-sm flex-1">Chat</Link>
                       </div>
                     </>
@@ -202,6 +232,43 @@ export default function Search() {
           </div>
         )}
       </div>
+
+      {reviewDoctor && (
+        <div className="review-modal-overlay">
+          <div className="review-modal glass-panel fade-in">
+            <div className="modal-header">
+              <h3>Review Dr. {reviewDoctor.name}</h3>
+              <button className="close-btn" onClick={() => setReviewDoctor(null)}>&times;</button>
+            </div>
+            <form onSubmit={handleReviewSubmit}>
+              <div className="rating-select mb-4">
+                <label>Your Rating</label>
+                <div className="stars-input">
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <Star 
+                      key={num} 
+                      size={24} 
+                      onClick={() => setNewReview({...newReview, rating: num})}
+                      className={`cursor-pointer ${num <= newReview.rating ? 'text-warning fill-current' : 'text-slate-300'}`}
+                      fill={num <= newReview.rating ? "#f59e0b" : "none"}
+                    />
+                  ))}
+                </div>
+              </div>
+              <textarea 
+                className="review-textarea mb-4"
+                placeholder="Share your experience with this doctor..."
+                value={newReview.comment}
+                onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
+                required
+              />
+              <button type="submit" className="btn btn-primary w-full" disabled={submittingReview}>
+                {submittingReview ? 'Submitting...' : 'Post Review'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

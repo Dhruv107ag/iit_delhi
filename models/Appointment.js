@@ -29,7 +29,9 @@ const appointmentSchema = new mongoose.Schema({
       message: { type: String },
       timestamp: { type: Date, default: Date.now }
     }
-  ]
+  ],
+  lastMessage: { type: String },
+  lastMessageTime: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
